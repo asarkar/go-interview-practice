@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2025 Reza Shiri
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ADDITIONAL TERMS - WEBSITE EXCLUSIVITY:
+The original author (Reza Shiri) reserves the exclusive right to create and operate 
+a commercial website or web application based on this Go Interview Practice project. 
+This includes but is not limited to:
+- Creating a hosted version of this platform
+- Offering premium features or subscriptions
+- Monetizing the platform through advertisements, courses, or services
+- Creating derivative commercial web applications
+
+While others may use, modify, and distribute this code under the MIT License, 
+they may not create a competing commercial website or web application based on 
+this project without explicit written permission from the copyright holder.
+
+This exclusivity clause does not affect the open-source nature of the code for 
+educational, personal, or non-commercial use, and does not restrict contributions 
+to the project itself. 
