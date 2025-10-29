@@ -6,12 +6,23 @@ Feel free to open issues for questions, comments, or suggestions.
 ## Challenge Categories
 
 ### Intermediate
+* [Challenge 16](challenge16): Performance Optimization
+* [Challenge 17](challenge17): Palindrome Checker
+* [Challenge 19](challenge19): Slice Operations
+* [Challenge 20](challenge20): Circuit Breaker Pattern
 * [Challenge 27](challenge27): Go Generics Data Structures
 
-## Running tests:
+## Running unit tests:
 ```
 ./.github/run.sh <directory>
 ```
+
+## Running benchmarks, excluding unit tests:
+```
+go test -run='^$' -bench='<test_method_regex>' <directory_containing_test>
+```
+`<test_method_regex>` could be something like `'Benchmark.+Sort$'`. Note the
+quotes around the regex.
 
 ## License
 

@@ -35,6 +35,14 @@ package="./${package:+$package/}..."
 if [[ -n "$1" && -z "$CI" ]]; then
 	# Delete project-specific `.mod` files.
 	find "$1" -type f -name "*.mod" -maxdepth 1 -exec rm -f {} +
+	num_files=$(ls -1F "$1" | wc -l)
+	min_files=5
+	if (( num_files < min_files )) ; then
+		default_color=$(tput -Txterm-256color sgr0)
+		red=$(tput -Txterm-256color setaf 1)
+		printf "%bProject '%s' has fewer than %d files%b\n" "$red" "$1" $min_files "$default_color"
+		exit 1
+	fi
 fi
 
 if (( no_test == 0 )); then
