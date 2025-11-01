@@ -6,11 +6,19 @@ Feel free to open issues for questions, comments, or suggestions.
 ## Challenge Categories
 
 ### Intermediate
+* [Challenge 4](challenge04): Concurrent Graph BFS Queries
+* [Challenge 5](challenge05): HTTP Authentication Middleware
+* [Challenge 7](challenge07): Bank Account with Error Handling
+* [Challenge 10](challenge10): Polymorphic Shape Calculator
+* [Challenge 13](challenge13): SQL Database Operations
+* [Challenge 14](challenge14): Microservices with gRPC
 * [Challenge 16](challenge16): Performance Optimization
 * [Challenge 17](challenge17): Palindrome Checker
 * [Challenge 19](challenge19): Slice Operations
 * [Challenge 20](challenge20): Circuit Breaker Pattern
+* [Challenge 23](challenge23): String Pattern Matching
 * [Challenge 27](challenge27): Go Generics Data Structures
+* [Challenge 30](challenge30): Context Management Implementation
 
 ## Running unit tests:
 ```

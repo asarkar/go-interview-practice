@@ -33,6 +33,8 @@ package="${1%/}" # Strip trailing slash, if any
 package="./${package:+$package/}..."
 
 if [[ -n "$1" && -z "$CI" ]]; then
+	# Add missing and remove unused modules.
+	go mod tidy -v
 	# Delete project-specific `.mod` files.
 	find "$1" -type f -name "*.mod" -maxdepth 1 -exec rm -f {} +
 	num_files=$(ls -1F "$1" | wc -l)

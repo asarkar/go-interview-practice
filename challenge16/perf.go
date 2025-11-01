@@ -127,6 +127,7 @@ func InefficientStringBuilder(parts []string, repeatCount int) string {
 
 	for range repeatCount {
 		for _, part := range parts {
+			//nolint: perfsprint // This is intentionally bad
 			result += part
 		}
 	}
@@ -308,10 +309,10 @@ func OptimizedSearch(text, substr string) map[int]string {
 	lps := make([]int, n)
 
 	// Build LPS.
-	kmpLoop(needle, needle, 1, lps, true)
+	KMPLoop(needle, needle, 1, lps, true)
 
 	// Search.
-	starts := kmpLoop(haystack, needle, 0, lps, false)
+	starts := KMPLoop(haystack, needle, 0, lps, false)
 
 	result := make(map[int]string, len(starts))
 	for i := range starts {
@@ -321,19 +322,20 @@ func OptimizedSearch(text, substr string) map[int]string {
 	return result
 }
 
-// kmpLoop either builds the LPS array or finds matches, depending on buildLPS flag.
-func kmpLoop(haystack, needle []rune, start int, lps []int, buildLPS bool) []int {
+// KMPLoop either builds the LPS array or finds matches, depending on buildLPS flag.
+func KMPLoop(haystack, needle []rune, start int, lps []int, buildLPS bool) []int {
 	i, j := 0, start
-	var matches []int
+	matches := make([]int, 0)
 
 	for j < len(haystack) {
 		switch {
 		case needle[i] == haystack[j]:
+			if buildLPS {
+				lps[j] = i + 1
+			}
 			i++
 			j++
-			if buildLPS && i < len(lps) {
-				lps[i] = i
-			} else if i == len(needle) {
+			if i == len(needle) {
 				matches = append(matches, j-i)
 				i = lps[i-1]
 			}
@@ -341,7 +343,7 @@ func kmpLoop(haystack, needle []rune, start int, lps []int, buildLPS bool) []int
 			i = lps[i-1]
 		default:
 			if buildLPS {
-				lps[i] = 0
+				lps[j] = 0
 			}
 			j++
 		}
