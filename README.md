@@ -20,6 +20,9 @@ Feel free to open issues for questions, comments, or suggestions.
 * [Challenge 27](challenge27): Go Generics Data Structures
 * [Challenge 30](challenge30): Context Management Implementation
 
+### Advanced
+* [Challenge 15](challenge15): OAuth2 Authentication
+
 ## Development
 
 Install [mise](https://mise.jdx.dev/installing-mise.html), then run:

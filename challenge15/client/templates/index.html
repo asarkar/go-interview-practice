@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Demo Client</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { font-size: 1.5rem; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }
+        .btn { display: inline-block; padding: 0.5rem 1rem; background: #0066cc; color: white; text-decoration: none; border-radius: 4px; margin-right: 0.5rem; }
+        .btn:hover { background: #0052a3; }
+        .btn-secondary { background: #666; }
+        .btn-secondary:hover { background: #555; }
+        code { background: #f4f4f4; padding: 0.2em 0.4em; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>OAuth2 Demo Client</h1>
+    {{if .LoggedIn}}
+    <div class="card">
+        <p><strong>Logged in as:</strong> {{.UserID}}</p>
+        <p><strong>Client:</strong> {{.ClientID}}</p>
+        <p><strong>Scopes:</strong> {{.Scope}}</p>
+        <p>
+            <a href="/api/me" class="btn">View API Response</a>
+            <a href="/logout" class="btn btn-secondary">Logout</a>
+        </p>
+    </div>
+    {{else}}
+    <div class="card">
+        <p>You are not logged in.</p>
+        <a href="/login" class="btn">Login with OAuth</a>
+    </div>
+    {{end}}
+</body>
+</html>
