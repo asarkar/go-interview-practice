@@ -1,4 +1,4 @@
-package perf
+package challenge16
 
 import (
 	"fmt"

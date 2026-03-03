@@ -1,4 +1,4 @@
-package authentication
+package challenge05
 
 import (
 	"fmt"

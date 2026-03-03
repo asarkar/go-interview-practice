@@ -1,0 +1,20 @@
+[env]
+GOPROXY = "https://proxy.golang.org,direct"
+
+[tools]
+go = "latest" # version pinned by go.mod
+"golangci-lint" = "latest"
+
+[tasks.setup]
+description = "Download dependencies"
+run = "scripts/setup.sh"
+
+[tasks.test]
+depends = ["setup"]
+description = "Run tests"
+run = "scripts/test.sh"
+
+[tasks.lint]
+depends = ["setup"]
+description = "Lint"
+run = "scripts/lint.sh"

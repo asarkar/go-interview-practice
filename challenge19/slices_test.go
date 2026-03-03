@@ -1,4 +1,4 @@
-package slices
+package challenge19
 
 import (
 	"reflect"

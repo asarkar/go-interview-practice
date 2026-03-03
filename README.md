@@ -20,14 +20,21 @@ Feel free to open issues for questions, comments, or suggestions.
 * [Challenge 27](challenge27): Go Generics Data Structures
 * [Challenge 30](challenge30): Context Management Implementation
 
-## Running unit tests:
+## Development
+
+Install [mise](https://mise.jdx.dev/installing-mise.html), then run:
 ```
-./.github/run.sh <directory>
+mise install
 ```
 
-## Running benchmarks, excluding unit tests:
+### Running unit tests:
 ```
-go test -run='^$' -bench='<test_method_regex>' <directory_containing_test>
+mise run test [directory]
+```
+
+### Running benchmarks, excluding unit tests:
+```
+mise exec -- go test -run='^$' -bench='<test_method_regex>' <directory_containing_test>
 ```
 `<test_method_regex>` could be something like `'Benchmark.+Sort$'`. Note the
 quotes around the regex.

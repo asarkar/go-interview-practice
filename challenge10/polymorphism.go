@@ -1,4 +1,4 @@
-package polymorphism
+package challenge10
 
 import (
 	"errors"

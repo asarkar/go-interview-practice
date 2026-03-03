@@ -1,4 +1,4 @@
-package circuitbreaker
+package challenge20
 
 import (
 	"context"

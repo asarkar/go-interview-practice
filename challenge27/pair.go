@@ -1,4 +1,4 @@
-package generics
+package challenge27
 
 //
 // 1. Generic Pair

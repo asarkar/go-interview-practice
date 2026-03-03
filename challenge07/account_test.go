@@ -1,4 +1,4 @@
-package account
+package challenge07
 
 import (
 	"fmt"
@@ -105,11 +105,19 @@ func TestNewBankAccount(t *testing.T) {
 				}
 
 				if account.Balance != tc.initialBalance {
-					t.Errorf("Expected Balance %.2f but got %.2f", tc.initialBalance, account.Balance)
+					t.Errorf(
+						"Expected Balance %.2f but got %.2f",
+						tc.initialBalance,
+						account.Balance,
+					)
 				}
 
 				if account.MinBalance != tc.minBalance {
-					t.Errorf("Expected MinBalance %.2f but got %.2f", tc.minBalance, account.MinBalance)
+					t.Errorf(
+						"Expected MinBalance %.2f but got %.2f",
+						tc.minBalance,
+						account.MinBalance,
+					)
 				}
 			}
 		})
@@ -350,11 +358,19 @@ func TestTransfer(t *testing.T) {
 				expectedTargetBalance := targetInitialBalance + tc.amount
 
 				if source.Balance != expectedSourceBalance {
-					t.Errorf("Expected source balance %.2f but got %.2f", expectedSourceBalance, source.Balance)
+					t.Errorf(
+						"Expected source balance %.2f but got %.2f",
+						expectedSourceBalance,
+						source.Balance,
+					)
 				}
 
 				if target.Balance != expectedTargetBalance {
-					t.Errorf("Expected target balance %.2f but got %.2f", expectedTargetBalance, target.Balance)
+					t.Errorf(
+						"Expected target balance %.2f but got %.2f",
+						expectedTargetBalance,
+						target.Balance,
+					)
 				}
 			}
 		})

@@ -1,4 +1,4 @@
-package polymorphism
+package challenge10
 
 import (
 	"fmt"
@@ -47,7 +47,12 @@ func TestRectangleConstructor(t *testing.T) {
 				}
 			} else {
 				if err != nil {
-					t.Errorf("Expected no error for width=%.2f, height=%.2f, but got: %v", tt.width, tt.height, err)
+					t.Errorf(
+						"Expected no error for width=%.2f, height=%.2f, but got: %v",
+						tt.width,
+						tt.height,
+						err,
+					)
 				}
 				if rect == nil {
 					t.Fatal("Rectangle should not be nil when no error")
@@ -132,7 +137,13 @@ func TestTriangleConstructor(t *testing.T) {
 				}
 			} else {
 				if err != nil {
-					t.Errorf("Expected no error for sides (%.2f, %.2f, %.2f), but got: %v", tt.a, tt.b, tt.c, err)
+					t.Errorf(
+						"Expected no error for sides (%.2f, %.2f, %.2f), but got: %v",
+						tt.a,
+						tt.b,
+						tt.c,
+						err,
+					)
 				}
 				if triangle == nil {
 					t.Fatal("Triangle should not be nil when no error")

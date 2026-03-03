@@ -1,4 +1,4 @@
-package generics
+package challenge27
 
 import (
 	"reflect"

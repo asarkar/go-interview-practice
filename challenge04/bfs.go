@@ -1,4 +1,4 @@
-package bfs
+package challenge04
 
 import "sync"
 

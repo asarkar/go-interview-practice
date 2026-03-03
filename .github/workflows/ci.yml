@@ -8,16 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
-      - name: Set up
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-      - name: Install dependencies
-        run: go version
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v3
+      - name: Setup
+        run: mise run setup
       - name: Test
-        run: ./.github/run.sh --no-lint
+        run: mise run test
       - name: Lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: latest
+        run: mise run lint

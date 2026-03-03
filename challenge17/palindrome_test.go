@@ -1,4 +1,4 @@
-package palindrome
+package challenge17
 
 import (
 	"strings"

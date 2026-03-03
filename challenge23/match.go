@@ -1,4 +1,4 @@
-package match
+package challenge23
 
 import (
 	perf "go-interview-practice/challenge16"

@@ -1,4 +1,4 @@
-package product
+package challenge14product
 
 import (
 	"context"

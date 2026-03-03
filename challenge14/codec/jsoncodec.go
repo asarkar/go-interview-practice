@@ -1,4 +1,4 @@
-package codec
+package challenge14codec
 
 import (
 	"encoding/json"

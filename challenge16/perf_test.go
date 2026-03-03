@@ -1,4 +1,4 @@
-package perf
+package challenge16
 
 import (
 	"fmt"
@@ -345,7 +345,7 @@ func TestOptimizedSearch(t *testing.T) {
 
 			if !reflect.DeepEqual(inefficientResult, optimizedResult) {
 				t.Errorf(
-					"OptimizedSearch gave different results than HighAllocationSearch. Got %q, expected %q",
+					"OptimizedSearch gave different results than HighAllocationSearch. Got %v, expected %v",
 					optimizedResult,
 					inefficientResult,
 				)

@@ -1,4 +1,4 @@
-package database
+package challenge13
 
 import (
 	"context"
@@ -184,7 +184,13 @@ func (ps *ProductStore) ListProducts(category string) ([]*Product, error) {
 	var products []*Product
 	for rows.Next() {
 		var p Product
-		if scanErr := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Quantity, &p.Category); scanErr != nil {
+		if scanErr := rows.Scan(
+			&p.ID,
+			&p.Name,
+			&p.Price,
+			&p.Quantity,
+			&p.Category,
+		); scanErr != nil {
 			return nil, scanErr
 		}
 		products = append(products, &p)

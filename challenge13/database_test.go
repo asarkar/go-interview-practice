@@ -1,4 +1,4 @@
-package database
+package challenge13
 
 import (
 	"database/sql"

@@ -1,4 +1,4 @@
-package server
+package challenge14server
 
 import (
 	"context"
