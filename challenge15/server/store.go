@@ -4,9 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"go-interview-practice/challenge15/oauth"
 	"time"
 
-	"go-interview-practice/challenge15/oauth"
 	"gorm.io/gorm"
 )
 
@@ -90,33 +90,25 @@ func (s *OAuth2Server) GetRefreshToken(rawToken string) (*oauth.RefreshToken, er
 }
 
 // DeleteAccessToken removes an access token identified by its raw value.
+// It is idempotent: deleting a non-existent token is not an error.
 func (s *OAuth2Server) DeleteAccessToken(rawToken string) error {
-	result := s.db.Where("token = ?", hashToken(rawToken)).Delete(&oauth.AccessToken{})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return errors.New("access token not found")
-	}
-	return nil
+	return s.db.Where("token = ?", hashToken(rawToken)).Delete(&oauth.AccessToken{}).Error
 }
 
 // DeleteRefreshToken removes a refresh token identified by its raw value.
+// It is idempotent: deleting a non-existent token is not an error.
 func (s *OAuth2Server) DeleteRefreshToken(rawToken string) error {
-	result := s.db.Where("token = ?", hashToken(rawToken)).Delete(&oauth.RefreshToken{})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return errors.New("refresh token not found")
-	}
-	return nil
+	return s.db.Where("token = ?", hashToken(rawToken)).Delete(&oauth.RefreshToken{}).Error
 }
 
 // RotateRefreshToken atomically replaces the old refresh token with a new
 // access+refresh token pair. Returns an error if the old token no longer exists,
 // which prevents replay attacks from concurrent requests.
-func (s *OAuth2Server) RotateRefreshToken(oldRaw string, newRT *oauth.RefreshToken, newAT *oauth.AccessToken) error {
+func (s *OAuth2Server) RotateRefreshToken(
+	oldRaw string,
+	newRT *oauth.RefreshToken,
+	newAT *oauth.AccessToken,
+) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.Where("token = ?", hashToken(oldRaw)).Delete(&oauth.RefreshToken{})
 		if result.Error != nil {

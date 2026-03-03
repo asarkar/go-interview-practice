@@ -8,7 +8,7 @@ type OAuth2Config struct {
 	RevokeEndpoint        string
 	LogoutEndpoint        string
 	ClientID              string
-	ClientSecret          string
+	ClientSecret          string //nolint:gosec // G117
 	RedirectURI           string
 	Scopes                []string
 }

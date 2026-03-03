@@ -5,14 +5,14 @@ import "time"
 // Client is a registered OAuth2 client application.
 type Client struct {
 	ClientID      string   `gorm:"primaryKey"`
-	ClientSecret  string
+	ClientSecret  string   //nolint:gosec // G117
 	RedirectURIs  []string `gorm:"serializer:json"`
 	AllowedScopes []string `gorm:"serializer:json"`
 }
 
 // AuthCode is an issued authorization code.
 type AuthCode struct {
-	Code                string   `gorm:"primaryKey"`
+	Code                string `gorm:"primaryKey"`
 	ClientID            string
 	UserID              string
 	RedirectURI         string
@@ -24,7 +24,7 @@ type AuthCode struct {
 
 // AccessToken is an issued OAuth2 access token.
 type AccessToken struct {
-	Token     string   `gorm:"primaryKey"`
+	Token     string `gorm:"primaryKey"`
 	ClientID  string
 	UserID    string
 	Scopes    []string `gorm:"serializer:json"`
@@ -33,7 +33,7 @@ type AccessToken struct {
 
 // RefreshToken is an issued OAuth2 refresh token.
 type RefreshToken struct {
-	Token     string   `gorm:"primaryKey"`
+	Token     string `gorm:"primaryKey"`
 	ClientID  string
 	UserID    string
 	Scopes    []string `gorm:"serializer:json"`
@@ -44,5 +44,5 @@ type RefreshToken struct {
 type User struct {
 	ID       string `gorm:"primaryKey"`
 	Username string `gorm:"uniqueIndex"`
-	Password string
+	Password string //nolint:gosec // G117
 }

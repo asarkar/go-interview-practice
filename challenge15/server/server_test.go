@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go-interview-practice/challenge15/oauth"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
-
-	"go-interview-practice/challenge15/oauth"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -67,7 +66,9 @@ func authorizeAndGetCode(t *testing.T, ts *httptest.Server, clientID, challenge 
 	t.Helper()
 	reqURL := fmt.Sprintf(
 		"%s/authorize?response_type=code&client_id=%s&redirect_uri=https://client.example.com/callback&scope=read+profile&state=teststate&code_challenge=%s&code_challenge_method=S256",
-		ts.URL, clientID, url.QueryEscape(challenge),
+		ts.URL,
+		clientID,
+		url.QueryEscape(challenge),
 	)
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("X-Test-User-ID", testUserID)
@@ -79,7 +80,10 @@ func authorizeAndGetCode(t *testing.T, ts *httptest.Server, clientID, challenge 
 	loc, _ := url.Parse(resp.Header.Get("Location"))
 	code := loc.Query().Get("code")
 	if code == "" {
-		t.Fatalf("expected authorization code in redirect, got location: %s", resp.Header.Get("Location"))
+		t.Fatalf(
+			"expected authorization code in redirect, got location: %s",
+			resp.Header.Get("Location"),
+		)
 	}
 	return code
 }
@@ -104,7 +108,11 @@ func exchangeCode(t *testing.T, ts *httptest.Server, code, verifier string) (str
 	}
 	json.NewDecoder(resp.Body).Decode(&tr)
 	if tr.AccessToken == "" || tr.RefreshToken == "" {
-		t.Fatalf("exchangeCode: expected both tokens, got access=%q refresh=%q", tr.AccessToken, tr.RefreshToken)
+		t.Fatalf(
+			"exchangeCode: expected both tokens, got access=%q refresh=%q",
+			tr.AccessToken,
+			tr.RefreshToken,
+		)
 	}
 	return tr.AccessToken, tr.RefreshToken
 }
@@ -184,7 +192,8 @@ func TestAuthorizationEndpoint(t *testing.T) {
 		challenge := oauth.DeriveChallenge(verifier)
 		reqURL := fmt.Sprintf(
 			"%s/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz123&code_challenge=%s&code_challenge_method=S256",
-			ts.URL, url.QueryEscape(challenge),
+			ts.URL,
+			url.QueryEscape(challenge),
 		)
 		req, _ := http.NewRequest("GET", reqURL, nil)
 		req.Header.Set("X-Test-User-ID", testUserID)
@@ -206,8 +215,11 @@ func TestAuthorizationEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidClientID", func(t *testing.T) {
-		req, _ := http.NewRequest("GET",
-			ts.URL+"/authorize?response_type=code&client_id=unknown&redirect_uri=https://client.example.com/callback&scope=read&state=xyz", nil)
+		req, _ := http.NewRequest(
+			"GET",
+			ts.URL+"/authorize?response_type=code&client_id=unknown&redirect_uri=https://client.example.com/callback&scope=read&state=xyz",
+			nil,
+		)
 		req.Header.Set("X-Test-User-ID", testUserID)
 		resp, _ := hc.Do(req)
 		if resp.StatusCode != http.StatusBadRequest {
@@ -216,8 +228,11 @@ func TestAuthorizationEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidRedirectURI", func(t *testing.T) {
-		req, _ := http.NewRequest("GET",
-			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://attacker.example.com/callback&scope=read&state=xyz", nil)
+		req, _ := http.NewRequest(
+			"GET",
+			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://attacker.example.com/callback&scope=read&state=xyz",
+			nil,
+		)
 		req.Header.Set("X-Test-User-ID", testUserID)
 		resp, _ := hc.Do(req)
 		if resp.StatusCode != http.StatusBadRequest {
@@ -226,8 +241,11 @@ func TestAuthorizationEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseType", func(t *testing.T) {
-		req, _ := http.NewRequest("GET",
-			ts.URL+"/authorize?response_type=token&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz", nil)
+		req, _ := http.NewRequest(
+			"GET",
+			ts.URL+"/authorize?response_type=token&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz",
+			nil,
+		)
 		req.Header.Set("X-Test-User-ID", testUserID)
 		resp, _ := hc.Do(req)
 		if resp.StatusCode != http.StatusFound {
@@ -244,7 +262,8 @@ func TestAuthorizationEndpoint(t *testing.T) {
 		challenge := oauth.DeriveChallenge(verifier)
 		reqURL := fmt.Sprintf(
 			"%s/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=admin&state=xyz&code_challenge=%s&code_challenge_method=S256",
-			ts.URL, url.QueryEscape(challenge),
+			ts.URL,
+			url.QueryEscape(challenge),
 		)
 		req, _ := http.NewRequest("GET", reqURL, nil)
 		req.Header.Set("X-Test-User-ID", testUserID)
@@ -259,8 +278,11 @@ func TestAuthorizationEndpoint(t *testing.T) {
 	})
 
 	t.Run("MissingPKCE", func(t *testing.T) {
-		req, _ := http.NewRequest("GET",
-			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz", nil)
+		req, _ := http.NewRequest(
+			"GET",
+			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz",
+			nil,
+		)
 		req.Header.Set("X-Test-User-ID", testUserID)
 		resp, _ := hc.Do(req)
 		if resp.StatusCode != http.StatusFound {
@@ -268,13 +290,19 @@ func TestAuthorizationEndpoint(t *testing.T) {
 		}
 		loc, _ := url.Parse(resp.Header.Get("Location"))
 		if loc.Query().Get("error") != "invalid_request" {
-			t.Errorf("expected error=invalid_request for missing PKCE, got %q", loc.Query().Get("error"))
+			t.Errorf(
+				"expected error=invalid_request for missing PKCE, got %q",
+				loc.Query().Get("error"),
+			)
 		}
 	})
 
 	t.Run("PlainPKCEMethod", func(t *testing.T) {
-		req, _ := http.NewRequest("GET",
-			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz&code_challenge=abc&code_challenge_method=plain", nil)
+		req, _ := http.NewRequest(
+			"GET",
+			ts.URL+"/authorize?response_type=code&client_id=test-client&redirect_uri=https://client.example.com/callback&scope=read&state=xyz&code_challenge=abc&code_challenge_method=plain",
+			nil,
+		)
 		req.Header.Set("X-Test-User-ID", testUserID)
 		resp, _ := hc.Do(req)
 		if resp.StatusCode != http.StatusFound {
@@ -282,7 +310,10 @@ func TestAuthorizationEndpoint(t *testing.T) {
 		}
 		loc, _ := url.Parse(resp.Header.Get("Location"))
 		if loc.Query().Get("error") != "invalid_request" {
-			t.Errorf("expected error=invalid_request for plain PKCE, got %q", loc.Query().Get("error"))
+			t.Errorf(
+				"expected error=invalid_request for plain PKCE, got %q",
+				loc.Query().Get("error"),
+			)
 		}
 	})
 }

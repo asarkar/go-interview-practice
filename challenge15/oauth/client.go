@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,8 +14,8 @@ import (
 // flow, refresh tokens, and make authenticated requests.
 type OAuth2Client struct {
 	Config       OAuth2Config
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string //nolint:gosec // G117
+	RefreshToken string //nolint:gosec // G117
 	TokenExpiry  time.Time
 	httpClient   *http.Client
 }
@@ -48,11 +49,21 @@ func (c *OAuth2Client) ExchangeCodeForToken(code, verifier string) error {
 		"client_secret": {c.Config.ClientSecret},
 		"code_verifier": {verifier},
 	}
-	resp, err := c.httpClient.PostForm(c.Config.TokenEndpoint, form)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		c.Config.TokenEndpoint,
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := c.httpClient.Do(req) //nolint:gosec // G704
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("token exchange failed with status %s", resp.Status)
 	}
@@ -67,11 +78,21 @@ func (c *OAuth2Client) DoRefreshToken() error {
 		"client_id":     {c.Config.ClientID},
 		"client_secret": {c.Config.ClientSecret},
 	}
-	resp, err := c.httpClient.PostForm(c.Config.TokenEndpoint, form)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		c.Config.TokenEndpoint,
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := c.httpClient.Do(req) //nolint:gosec // G704
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("token refresh failed with status %s", resp.Status)
 	}
@@ -80,18 +101,18 @@ func (c *OAuth2Client) DoRefreshToken() error {
 
 // MakeAuthenticatedRequest performs an HTTP request with a Bearer token.
 func (c *OAuth2Client) MakeAuthenticatedRequest(urlStr, method string) (*http.Response, error) {
-	req, err := http.NewRequest(method, urlStr, nil)
+	req, err := http.NewRequestWithContext(context.Background(), method, urlStr, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.AccessToken)
-	return c.httpClient.Do(req)
+	return c.httpClient.Do(req) //nolint:gosec // G704
 }
 
 func (c *OAuth2Client) decodeTokenResponse(resp *http.Response) error {
 	var tr struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
+		AccessToken  string `json:"access_token"`  //nolint:gosec // G117
+		RefreshToken string `json:"refresh_token"` //nolint:gosec // G117
 		ExpiresIn    int    `json:"expires_in"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {

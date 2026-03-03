@@ -5,9 +5,10 @@ import (
 	"net/url"
 )
 
-var loginTemplate = template.Must(template.New("login").Funcs(template.FuncMap{
-	"urlquery": url.QueryEscape,
-}).Parse(`<!DOCTYPE html>
+var loginTemplate = template.Must( //nolint:gochecknoglobals
+	template.New("login").Funcs(template.FuncMap{
+		"urlquery": url.QueryEscape,
+	}).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,4 +30,5 @@ var loginTemplate = template.Must(template.New("login").Funcs(template.FuncMap{
         <button type="submit">Sign in</button>
     </form>
 </body>
-</html>`))
+</html>`),
+)

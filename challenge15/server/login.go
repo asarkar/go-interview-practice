@@ -3,30 +3,23 @@ package server
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"go-interview-practice/challenge15/oauth"
 	"net/http"
-	"sync"
 	"time"
 
-	"go-interview-practice/challenge15/oauth"
 	"golang.org/x/crypto/bcrypt"
 )
 
-const loginCookieName = "auth_session"
-const loginSessionTTL = 24 * time.Hour
-const csrfTokenTTL = 15 * time.Minute
+const (
+	loginCookieName = "auth_session"
+	loginSessionTTL = 24 * time.Hour
+	csrfTokenTTL    = 15 * time.Minute
+)
 
 type loginSession struct {
 	userID    string
 	expiresAt time.Time
 }
-
-var (
-	loginSessions   = make(map[string]loginSession)
-	loginSessionsMu sync.RWMutex
-
-	csrfTokens   = make(map[string]time.Time)
-	csrfTokensMu sync.RWMutex
-)
 
 func (s *OAuth2Server) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	redirect := r.URL.Query().Get("redirect")
@@ -41,16 +34,19 @@ func (s *OAuth2Server) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *OAuth2Server) handleLoginPost(w http.ResponseWriter, r *http.Request, redirect string) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 
 	// Validate and consume the CSRF token (synchronizer token pattern).
 	csrfToken := r.FormValue("csrf_token")
-	csrfTokensMu.Lock()
-	expiry, ok := csrfTokens[csrfToken]
+	s.csrfTokensMu.Lock()
+	expiry, ok := s.csrfTokens[csrfToken]
 	if ok {
-		delete(csrfTokens, csrfToken)
+		delete(s.csrfTokens, csrfToken)
 	}
-	csrfTokensMu.Unlock()
+	s.csrfTokensMu.Unlock()
 	if !ok || time.Now().After(expiry) {
 		http.Error(w, "invalid CSRF token", http.StatusForbidden)
 		return
@@ -78,12 +74,12 @@ func (s *OAuth2Server) handleLoginPost(w http.ResponseWriter, r *http.Request, r
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	loginSessionsMu.Lock()
-	loginSessions[sessionID] = loginSession{
+	s.loginSessionsMu.Lock()
+	s.loginSessions[sessionID] = loginSession{
 		userID:    user.ID,
 		expiresAt: time.Now().Add(loginSessionTTL),
 	}
-	loginSessionsMu.Unlock()
+	s.loginSessionsMu.Unlock()
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     loginCookieName,
@@ -102,27 +98,29 @@ func (s *OAuth2Server) renderLoginFormWithNewCSRF(w http.ResponseWriter, redirec
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	csrfTokensMu.Lock()
-	csrfTokens[csrf] = time.Now().Add(csrfTokenTTL)
-	csrfTokensMu.Unlock()
+	s.csrfTokensMu.Lock()
+	s.csrfTokens[csrf] = time.Now().Add(csrfTokenTTL)
+	s.csrfTokensMu.Unlock()
 	s.renderLoginForm(w, redirect, csrf)
 }
 
 func (s *OAuth2Server) renderLoginForm(w http.ResponseWriter, redirect, csrfToken string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	loginTemplate.Execute(w, map[string]string{
+	if err := loginTemplate.Execute(w, map[string]string{
 		"Redirect":  redirect,
 		"CSRFToken": csrfToken,
-	})
+	}); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
 }
 
 // HandleLogout clears the server-side login session and redirects to
 // post_logout_redirect_uri (defaults to "/").
 func (s *OAuth2Server) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie(loginCookieName); err == nil && cookie.Value != "" {
-		loginSessionsMu.Lock()
-		delete(loginSessions, cookie.Value)
-		loginSessionsMu.Unlock()
+		s.loginSessionsMu.Lock()
+		delete(s.loginSessions, cookie.Value)
+		s.loginSessionsMu.Unlock()
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     loginCookieName,
@@ -145,9 +143,9 @@ func (s *OAuth2Server) getUserFromLogin(r *http.Request) string {
 	if err != nil || cookie.Value == "" {
 		return ""
 	}
-	loginSessionsMu.RLock()
-	sess, ok := loginSessions[cookie.Value]
-	loginSessionsMu.RUnlock()
+	s.loginSessionsMu.RLock()
+	sess, ok := s.loginSessions[cookie.Value]
+	s.loginSessionsMu.RUnlock()
 	if !ok || time.Now().After(sess.expiresAt) {
 		return ""
 	}

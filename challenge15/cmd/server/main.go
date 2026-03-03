@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-
 	"go-interview-practice/challenge15/oauth"
 	"go-interview-practice/challenge15/server"
+	"log"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"

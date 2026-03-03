@@ -4,24 +4,20 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
-	"sync"
 	"time"
 )
 
-const sessionCookieName = "demo_session"
-const sessionTTL = 24 * time.Hour
+const (
+	sessionCookieName = "demo_session"
+	sessionTTL        = 24 * time.Hour
+)
 
 type sessionData struct {
-	AccessToken      string
-	RefreshToken     string
+	AccessToken      string    //nolint:gosec // G117
+	RefreshToken     string    //nolint:gosec // G117
 	ExpiresAt        time.Time // access token expiry
 	sessionExpiresAt time.Time // server-side session TTL
 }
-
-var (
-	sessions   = make(map[string]*sessionData)
-	sessionsMu sync.RWMutex
-)
 
 func generateSessionID() (string, error) {
 	b := make([]byte, 16)
@@ -36,9 +32,9 @@ func (a *App) getSession(r *http.Request) *sessionData {
 	if err != nil || cookie.Value == "" {
 		return nil
 	}
-	sessionsMu.RLock()
-	sess := sessions[cookie.Value]
-	sessionsMu.RUnlock()
+	a.sessionsMu.RLock()
+	sess := a.sessions[cookie.Value]
+	a.sessionsMu.RUnlock()
 	if sess == nil || time.Now().After(sess.sessionExpiresAt) {
 		return nil
 	}
@@ -51,9 +47,9 @@ func (a *App) setSession(w http.ResponseWriter, data *sessionData) error {
 		return err
 	}
 	data.sessionExpiresAt = time.Now().Add(sessionTTL)
-	sessionsMu.Lock()
-	sessions[id] = data
-	sessionsMu.Unlock()
+	a.sessionsMu.Lock()
+	a.sessions[id] = data
+	a.sessionsMu.Unlock()
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
@@ -69,9 +65,9 @@ func (a *App) setSession(w http.ResponseWriter, data *sessionData) error {
 // clearSession deletes the server-side session entry and expires the cookie.
 func (a *App) clearSession(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie(sessionCookieName); err == nil && cookie.Value != "" {
-		sessionsMu.Lock()
-		delete(sessions, cookie.Value)
-		sessionsMu.Unlock()
+		a.sessionsMu.Lock()
+		delete(a.sessions, cookie.Value)
+		a.sessionsMu.Unlock()
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,

@@ -1,15 +1,15 @@
 package client
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"go-interview-practice/challenge15/oauth"
 	"net/http"
 	"net/url"
-	"sync"
+	"strings"
 	"time"
-
-	"go-interview-practice/challenge15/oauth"
 )
 
 func randomHex(n int) (string, error) {
@@ -27,38 +27,36 @@ type pendingAuth struct {
 	Expires  time.Time
 }
 
-var (
-	pendingAuths   = make(map[string]*pendingAuth)
-	pendingAuthsMu sync.RWMutex
-)
-
-func (a *App) startOAuthFlow(w http.ResponseWriter, r *http.Request) (verifier, state, authURL string, err error) {
-	verifier, err = oauth.GenerateVerifier()
+func (a *App) startOAuthFlow(
+	_ http.ResponseWriter,
+	_ *http.Request,
+) (string, string, string, error) {
+	verifier, err := oauth.GenerateVerifier()
 	if err != nil {
 		return "", "", "", err
 	}
 	challenge := oauth.DeriveChallenge(verifier)
-	state, err = randomHex(16)
+	state, err := randomHex(16)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	pendingAuthsMu.Lock()
-	pendingAuths[state] = &pendingAuth{Verifier: verifier, Expires: time.Now().Add(pendingTTL)}
-	pendingAuthsMu.Unlock()
+	a.pendingAuthsMu.Lock()
+	a.pendingAuths[state] = &pendingAuth{Verifier: verifier, Expires: time.Now().Add(pendingTTL)}
+	a.pendingAuthsMu.Unlock()
 
-	authURL = a.oauthClient.GetAuthorizationURL(state, challenge, "S256")
+	authURL := a.oauthClient.GetAuthorizationURL(state, challenge, "S256")
 	return verifier, state, authURL, nil
 }
 
-func (a *App) consumePendingAuth(state string) (verifier string, ok bool) {
-	pendingAuthsMu.Lock()
-	defer pendingAuthsMu.Unlock()
-	p, exists := pendingAuths[state]
+func (a *App) consumePendingAuth(state string) (string, bool) {
+	a.pendingAuthsMu.Lock()
+	defer a.pendingAuthsMu.Unlock()
+	p, exists := a.pendingAuths[state]
 	if !exists || time.Now().After(p.Expires) {
 		return "", false
 	}
-	delete(pendingAuths, state)
+	delete(a.pendingAuths, state)
 	return p.Verifier, true
 }
 
@@ -69,11 +67,21 @@ func (a *App) introspectToken(accessToken string) (map[string]any, error) {
 		"client_id":     {a.config.ClientID},
 		"client_secret": {a.config.ClientSecret},
 	}
-	resp, err := a.httpClient.PostForm(a.config.IntrospectEndpoint, form)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		a.config.IntrospectEndpoint,
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := a.httpClient.Do(req) //nolint:gosec // G704
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
 
 	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -91,9 +99,19 @@ func (a *App) revokeToken(token, tokenTypeHint string) {
 		"client_id":       {a.config.ClientID},
 		"client_secret":   {a.config.ClientSecret},
 	}
-	resp, err := a.httpClient.PostForm(a.config.RevokeEndpoint, form)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		a.config.RevokeEndpoint,
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := a.httpClient.Do(req) //nolint:gosec // G704
 	if err == nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 
@@ -126,4 +144,3 @@ func (a *App) exchangeCode(code, verifier string) (*sessionData, error) {
 		ExpiresAt:    local.TokenExpiry,
 	}, nil
 }
-

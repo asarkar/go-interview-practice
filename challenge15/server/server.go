@@ -1,26 +1,45 @@
 package server
 
 import (
+	"go-interview-practice/challenge15/oauth"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"go-interview-practice/challenge15/oauth"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 // OAuth2Server is the OAuth2 authorization server.
 type OAuth2Server struct {
-	db *gorm.DB
+	db              *gorm.DB
+	loginSessions   map[string]loginSession
+	loginSessionsMu sync.RWMutex
+	csrfTokens      map[string]time.Time
+	csrfTokensMu    sync.RWMutex
 }
 
 // NewOAuth2Server initialises the server, auto-migrates the schema, and seeds a
 // demo user with a bcrypt-hashed password.
 func NewOAuth2Server(db *gorm.DB) *OAuth2Server {
-	db.AutoMigrate(&oauth.Client{}, &oauth.AuthCode{}, &oauth.AccessToken{}, &oauth.RefreshToken{}, &oauth.User{})
-	s := &OAuth2Server{db: db}
+	if err := db.AutoMigrate(
+		&oauth.Client{},
+		&oauth.AuthCode{},
+		&oauth.AccessToken{},
+		&oauth.RefreshToken{},
+		&oauth.User{},
+	); err != nil {
+		log.Fatalf("failed to migrate schema: %v", err)
+	}
+	s := &OAuth2Server{
+		db:            db,
+		loginSessions: make(map[string]loginSession),
+		csrfTokens:    make(map[string]time.Time),
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatalf("failed to hash demo user password: %v", err)
@@ -52,5 +71,12 @@ func (s *OAuth2Server) Router() http.Handler {
 
 // StartServer starts the HTTP server on addr (e.g. ":8080").
 func (s *OAuth2Server) StartServer(addr string) error {
-	return http.ListenAndServe(addr, s.Router())
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      s.Router(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+	return srv.ListenAndServe()
 }

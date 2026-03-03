@@ -6,12 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"go-interview-practice/challenge15/oauth"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
-
-	"go-interview-practice/challenge15/oauth"
 )
 
 // contextKey is an unexported type for context keys in this package.
@@ -27,10 +27,10 @@ const (
 )
 
 type tokenResponse struct {
-	AccessToken  string `json:"access_token"`
+	AccessToken  string `json:"access_token"` //nolint:gosec // G117
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token"` //nolint:gosec // G117
 	Scope        string `json:"scope"`
 }
 
@@ -42,7 +42,7 @@ type errResponse struct {
 func writeError(w http.ResponseWriter, status int, code, desc string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(errResponse{Error: code, Description: desc})
+	_ = json.NewEncoder(w).Encode(errResponse{Error: code, Description: desc})
 }
 
 func generateToken() (string, error) {
@@ -71,6 +71,21 @@ func (s *OAuth2Server) authenticateClient(r *http.Request) (*oauth.Client, error
 	return client, nil
 }
 
+// filterScopes returns the intersection of requested scope tokens and the
+// client's allowed scopes. Returns nil if the requested scope string is empty.
+func filterScopes(allowed []string, requested string) []string {
+	if requested == "" {
+		return nil
+	}
+	var result []string
+	for _, sc := range strings.Split(requested, " ") {
+		if sc != "" && slices.Contains(allowed, sc) {
+			result = append(result, sc)
+		}
+	}
+	return result
+}
+
 // HandleAuthorize implements GET /authorize (authorization code grant).
 func (s *OAuth2Server) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
@@ -88,14 +103,7 @@ func (s *OAuth2Server) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validRedirect := false
-	for _, uri := range client.RedirectURIs {
-		if uri == redirectURI {
-			validRedirect = true
-			break
-		}
-	}
-	if !validRedirect {
+	if !slices.Contains(client.RedirectURIs, redirectURI) {
 		writeError(w, http.StatusBadRequest, "invalid_redirect_uri", "redirect URI not registered")
 		return
 	}
@@ -105,21 +113,10 @@ func (s *OAuth2Server) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var grantedScopes []string
-	if scope != "" {
-		allowedSet := make(map[string]bool, len(client.AllowedScopes))
-		for _, sc := range client.AllowedScopes {
-			allowedSet[sc] = true
-		}
-		for _, sc := range strings.Split(scope, " ") {
-			if sc != "" && allowedSet[sc] {
-				grantedScopes = append(grantedScopes, sc)
-			}
-		}
-		if len(grantedScopes) == 0 {
-			redirectWithError(w, r, redirectURI, "invalid_scope", state)
-			return
-		}
+	grantedScopes := filterScopes(client.AllowedScopes, scope)
+	if scope != "" && len(grantedScopes) == 0 {
+		redirectWithError(w, r, redirectURI, "invalid_scope", state)
+		return
 	}
 
 	if codeChallenge == "" || codeChallengeMethod != "S256" {
@@ -176,7 +173,10 @@ func redirectWithError(w http.ResponseWriter, r *http.Request, redirectURI, errC
 
 // HandleToken implements POST /token (authorization_code and refresh_token grants).
 func (s *OAuth2Server) HandleToken(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
+		return
+	}
 	switch r.FormValue("grant_type") {
 	case "authorization_code":
 		s.handleAuthCodeGrant(w, r)
@@ -200,7 +200,12 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 
 	authCode, err := s.ConsumeAuthCode(code)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_grant", "invalid or already-used authorization code")
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"invalid_grant",
+			"invalid or already-used authorization code",
+		)
 		return
 	}
 
@@ -215,7 +220,11 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 	}
 
 	if authCode.CodeChallenge != "" {
-		if !oauth.VerifyChallenge(codeVerifier, authCode.CodeChallenge, authCode.CodeChallengeMethod) {
+		if !oauth.VerifyChallenge(
+			codeVerifier,
+			authCode.CodeChallenge,
+			authCode.CodeChallengeMethod,
+		) {
 			writeError(w, http.StatusBadRequest, "invalid_grant", "invalid code_verifier")
 			return
 		}
@@ -223,17 +232,39 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 
 	atStr, err := generateToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "server_error", "failed to generate access token")
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"server_error",
+			"failed to generate access token",
+		)
 		return
 	}
 	rtStr, err := generateToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "server_error", "failed to generate refresh token")
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"server_error",
+			"failed to generate refresh token",
+		)
 		return
 	}
 
-	at := &oauth.AccessToken{Token: atStr, ClientID: client.ClientID, UserID: authCode.UserID, Scopes: authCode.Scopes, ExpiresAt: time.Now().Add(accessTokenTTL)}
-	rt := &oauth.RefreshToken{Token: rtStr, ClientID: client.ClientID, UserID: authCode.UserID, Scopes: authCode.Scopes, ExpiresAt: time.Now().Add(refreshTokenTTL)}
+	at := &oauth.AccessToken{
+		Token:     atStr,
+		ClientID:  client.ClientID,
+		UserID:    authCode.UserID,
+		Scopes:    authCode.Scopes,
+		ExpiresAt: time.Now().Add(accessTokenTTL),
+	}
+	rt := &oauth.RefreshToken{
+		Token:     rtStr,
+		ClientID:  client.ClientID,
+		UserID:    authCode.UserID,
+		Scopes:    authCode.Scopes,
+		ExpiresAt: time.Now().Add(refreshTokenTTL),
+	}
 
 	if err := s.IssueTokens(at, rt); err != nil {
 		writeError(w, http.StatusInternalServerError, "server_error", "failed to persist tokens")
@@ -241,7 +272,7 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tokenResponse{
+	_ = json.NewEncoder(w).Encode(tokenResponse{
 		AccessToken:  atStr,
 		TokenType:    "Bearer",
 		ExpiresIn:    int(accessTokenTTL.Seconds()),
@@ -265,7 +296,12 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 	}
 
 	if rt.ClientID != client.ClientID {
-		writeError(w, http.StatusUnauthorized, "invalid_grant", "token does not belong to this client")
+		writeError(
+			w,
+			http.StatusUnauthorized,
+			"invalid_grant",
+			"token does not belong to this client",
+		)
 		return
 	}
 
@@ -276,17 +312,39 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 
 	atStr, err := generateToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "server_error", "failed to generate access token")
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"server_error",
+			"failed to generate access token",
+		)
 		return
 	}
 	rtStr, err := generateToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "server_error", "failed to generate refresh token")
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"server_error",
+			"failed to generate refresh token",
+		)
 		return
 	}
 
-	newAT := &oauth.AccessToken{Token: atStr, ClientID: client.ClientID, UserID: rt.UserID, Scopes: rt.Scopes, ExpiresAt: time.Now().Add(accessTokenTTL)}
-	newRT := &oauth.RefreshToken{Token: rtStr, ClientID: client.ClientID, UserID: rt.UserID, Scopes: rt.Scopes, ExpiresAt: time.Now().Add(refreshTokenTTL)}
+	newAT := &oauth.AccessToken{
+		Token:     atStr,
+		ClientID:  client.ClientID,
+		UserID:    rt.UserID,
+		Scopes:    rt.Scopes,
+		ExpiresAt: time.Now().Add(accessTokenTTL),
+	}
+	newRT := &oauth.RefreshToken{
+		Token:     rtStr,
+		ClientID:  client.ClientID,
+		UserID:    rt.UserID,
+		Scopes:    rt.Scopes,
+		ExpiresAt: time.Now().Add(refreshTokenTTL),
+	}
 
 	if err := s.RotateRefreshToken(rawRT, newRT, newAT); err != nil {
 		writeError(w, http.StatusInternalServerError, "server_error", "failed to rotate tokens")
@@ -294,7 +352,7 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tokenResponse{
+	_ = json.NewEncoder(w).Encode(tokenResponse{
 		AccessToken:  atStr,
 		TokenType:    "Bearer",
 		ExpiresIn:    int(accessTokenTTL.Seconds()),
@@ -305,33 +363,32 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 
 // HandleRevoke implements POST /revoke (RFC 7009).
 func (s *OAuth2Server) HandleRevoke(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
+		return
+	}
 	if _, err := s.authenticateClient(r); err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid_client", "invalid client credentials")
 		return
 	}
 
 	token := r.FormValue("token")
-	hint := r.FormValue("token_type_hint")
-	switch hint {
-	case "access_token":
-		if s.DeleteAccessToken(token) != nil {
-			s.DeleteRefreshToken(token) //nolint:errcheck
-		}
-	case "refresh_token":
-		if s.DeleteRefreshToken(token) != nil {
-			s.DeleteAccessToken(token) //nolint:errcheck
-		}
-	default:
-		if s.DeleteAccessToken(token) != nil {
-			s.DeleteRefreshToken(token) //nolint:errcheck
-		}
+	if err := s.DeleteAccessToken(token); err != nil {
+		writeError(w, http.StatusInternalServerError, "server_error", "failed to revoke token")
+		return
+	}
+	if err := s.DeleteRefreshToken(token); err != nil {
+		writeError(w, http.StatusInternalServerError, "server_error", "failed to revoke token")
+		return
 	}
 }
 
 // HandleIntrospect implements POST /introspect (RFC 7662).
 func (s *OAuth2Server) HandleIntrospect(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
+		return
+	}
 	if _, err := s.authenticateClient(r); err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid_client", "invalid client credentials")
 		return
@@ -340,10 +397,10 @@ func (s *OAuth2Server) HandleIntrospect(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	at, err := s.ValidateToken(r.FormValue("token"))
 	if err != nil {
-		json.NewEncoder(w).Encode(map[string]any{"active": false})
+		_ = json.NewEncoder(w).Encode(map[string]any{"active": false})
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"active":     true,
 		"client_id":  at.ClientID,
 		"username":   at.UserID,
@@ -358,7 +415,12 @@ func (s *OAuth2Server) HandleIntrospect(w http.ResponseWriter, r *http.Request) 
 func (s *OAuth2Server) HandleUserinfo(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if !strings.HasPrefix(auth, "Bearer ") {
-		writeError(w, http.StatusUnauthorized, "invalid_request", "missing or invalid Authorization header")
+		writeError(
+			w,
+			http.StatusUnauthorized,
+			"invalid_request",
+			"missing or invalid Authorization header",
+		)
 		return
 	}
 	token := strings.TrimPrefix(auth, "Bearer ")
@@ -368,7 +430,7 @@ func (s *OAuth2Server) HandleUserinfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"user_id":   at.UserID,
 		"client_id": at.ClientID,
 		"scope":     strings.Join(at.Scopes, " "),
