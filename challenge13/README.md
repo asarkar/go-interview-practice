@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 13: SQL Database Operations with Go
 
 In this challenge, you will implement a product inventory system using Go and SQL. You'll create functions that interact with a SQLite database to perform CRUD operations (Create, Read, Update, Delete) on products.

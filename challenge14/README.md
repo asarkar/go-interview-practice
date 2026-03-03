@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 14: Microservices with gRPC
 
 In this challenge, you will implement a microservice architecture using gRPC concepts for service-to-service communication. You'll create a User service and a Product service that communicate to provide an order management system.

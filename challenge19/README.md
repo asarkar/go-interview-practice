@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 19: Slice Operations
 
 ## Problem Statement

@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 20: Circuit Breaker Pattern
 
 ## Problem Statement

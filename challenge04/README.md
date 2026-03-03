@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 4: Concurrent Graph BFS Queries
 
 You are required to concurrently process multiple breadth-first search (BFS) queries on a single graph. Each query specifies a starting node, and you must compute the BFS order from that node. Unlike a simple single-threaded BFS, your solution should utilize goroutines and channels (or concurrency-safe data structures) to handle multiple queries efficiently and in parallel.

@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 16: Performance Optimization with Benchmarking
 
 In this challenge, you will optimize several Go functions for performance, using benchmarking to measure your improvements. You'll work with a set of common but inefficient implementations and apply various techniques to make them faster without changing their functionality.

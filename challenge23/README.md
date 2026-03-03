@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 23: String Pattern Matching
 
 ## Problem Statement

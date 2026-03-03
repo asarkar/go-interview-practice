@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 17: Palindrome Checker
 
 ## Problem Statement

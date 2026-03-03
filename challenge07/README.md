@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 7: Bank Account with Error Handling
 
 ## Problem Statement

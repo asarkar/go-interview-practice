@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 15: OAuth2 Authentication System
 
 In this challenge, you will implement an OAuth2 authentication system using Go. You'll create a server that supports the OAuth2 authorization code flow, allowing third-party applications to authenticate users without directly handling their credentials.

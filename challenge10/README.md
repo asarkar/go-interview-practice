@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 10: Polymorphic Shape Calculator
 
 ## Problem Statement

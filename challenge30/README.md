@@ -1,5 +1,3 @@
- # Challenge 30: Context Management Implementation
-
 ## Overview
 
 Implement a context manager that demonstrates essential Go `context` package patterns. The `context` package is fundamental for managing cancellation signals, timeouts, and request-scoped values in Go applications.

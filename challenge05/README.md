@@ -1,5 +1,3 @@
-[View the Scoreboard](SCOREBOARD.md)
-
 # Challenge 5: HTTP Authentication Middleware
 
 In this challenge, you must implement an HTTP middleware in Go that checks each incoming request for a valid authentication token. If the token is invalid, the middleware should return an HTTP 401 Unauthorized response. If valid, it should pass the request to the next handler.
