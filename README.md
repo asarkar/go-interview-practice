@@ -23,6 +23,7 @@ Feel free to open issues for questions, comments, or suggestions.
 ### Advanced
 * [Challenge 8](challenge08): Chat Server with Channels
 * [Challenge 9](challenge09): RESTful Book Management API
+* [Challenge 11](challenge11): Concurrent Web Content Aggregator
 * [Challenge 15](challenge15): OAuth2 Authentication
 
 ## Development
