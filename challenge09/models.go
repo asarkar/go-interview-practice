@@ -51,3 +51,7 @@ type ErrorResponse struct {
 }
 
 var errNotFound = errors.New("not found")
+
+type validationError struct{ msg string }
+
+func (e *validationError) Error() string { return e.msg }

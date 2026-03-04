@@ -1,7 +1,5 @@
 package books
 
-import "errors"
-
 // DefaultBookService implements BookService
 type DefaultBookService struct {
 	repo BookRepository
@@ -22,24 +20,24 @@ func (s *DefaultBookService) GetBookByID(id string) (*Book, error) {
 
 func (s *DefaultBookService) CreateBook(book *Book) error {
 	if book.Title == "" || book.Author == "" {
-		return errors.New("title and author are required")
+		return &validationError{"title and author are required"}
 	}
 	return s.repo.Create(book)
 }
 
 func (s *DefaultBookService) UpdateBook(id string, book *Book) error {
 	if book.Title == "" || book.Author == "" {
-		return errors.New("title and author are required")
+		return &validationError{"title and author are required"}
 	}
 	return s.repo.Update(id, book)
 }
 
 func (s *DefaultBookService) PartiallyUpdateBook(id string, patch *BookPatch) (*Book, error) {
 	if patch.Title != nil && *patch.Title == "" {
-		return nil, errors.New("title cannot be empty")
+		return nil, &validationError{"title cannot be empty"}
 	}
 	if patch.Author != nil && *patch.Author == "" {
-		return nil, errors.New("author cannot be empty")
+		return nil, &validationError{"author cannot be empty"}
 	}
 	return s.repo.Patch(id, patch)
 }

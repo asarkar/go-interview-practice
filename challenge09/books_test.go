@@ -151,7 +151,7 @@ func TestGetBookByID(t *testing.T) {
 	resp.Body.Close()
 
 	// Now get the book by ID
-	resp, err := http.Get(fmt.Sprintf("%s/api/books/%s", server.URL, createdBook.ID))
+	resp, err = http.Get(fmt.Sprintf("%s/api/books/%s", server.URL, createdBook.ID))
 	if err != nil {
 		t.Fatalf("Failed to make GET request: %v", err)
 	}

@@ -49,6 +49,11 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "book not found")
 		return
 	}
+	var ve *validationError
+	if errors.As(err, &ve) {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	writeError(w, http.StatusInternalServerError, err.Error())
 }
 
