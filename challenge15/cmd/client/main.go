@@ -2,14 +2,13 @@ package main
 
 import (
 	"go-interview-practice/challenge15/client"
-	"go-interview-practice/challenge15/oauth"
 	"log"
 	"net/http"
 	"time"
 )
 
 func main() {
-	config := oauth.OAuth2Config{ //nolint:gosec // G101: demo config
+	config := client.OAuth2Config{ //nolint:gosec // G101: demo config
 		AuthorizationEndpoint: "http://localhost:8080/authorize",
 		TokenEndpoint:         "http://localhost:8080/token",
 		IntrospectEndpoint:    "http://localhost:8080/introspect",

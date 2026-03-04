@@ -19,27 +19,27 @@ func (s *DefaultBookService) GetBookByID(id string) (*Book, error) {
 }
 
 func (s *DefaultBookService) CreateBook(book *Book) error {
-	if book.Title == "" || book.Author == "" {
+	if book.Title == nil || *book.Title == "" || book.Author == nil || *book.Author == "" {
 		return &validationError{"title and author are required"}
 	}
 	return s.repo.Create(book)
 }
 
 func (s *DefaultBookService) UpdateBook(id string, book *Book) error {
-	if book.Title == "" || book.Author == "" {
+	if book.Title == nil || *book.Title == "" || book.Author == nil || *book.Author == "" {
 		return &validationError{"title and author are required"}
 	}
 	return s.repo.Update(id, book)
 }
 
-func (s *DefaultBookService) PartiallyUpdateBook(id string, patch *BookPatch) (*Book, error) {
-	if patch.Title != nil && *patch.Title == "" {
+func (s *DefaultBookService) PartiallyUpdateBook(id string, updates *PartialBook) (*Book, error) {
+	if updates.Title != nil && *updates.Title == "" {
 		return nil, &validationError{"title cannot be empty"}
 	}
-	if patch.Author != nil && *patch.Author == "" {
+	if updates.Author != nil && *updates.Author == "" {
 		return nil, &validationError{"author cannot be empty"}
 	}
-	return s.repo.Patch(id, patch)
+	return s.repo.Patch(id, updates)
 }
 
 func (s *DefaultBookService) DeleteBook(id string) error {

@@ -54,12 +54,22 @@ func (r *GORMBookRepository) Create(book *Book) error {
 }
 
 func (r *GORMBookRepository) Update(id string, book *Book) error {
+	py, isbn, desc := 0, "", ""
+	if book.PublishedYear != nil {
+		py = *book.PublishedYear
+	}
+	if book.ISBN != nil {
+		isbn = *book.ISBN
+	}
+	if book.Description != nil {
+		desc = *book.Description
+	}
 	result := r.db.Model(&Book{}).Where("id = ?", id).Updates(map[string]any{
-		"title":          book.Title,
-		"author":         book.Author,
-		"published_year": book.PublishedYear,
-		"isbn":           book.ISBN,
-		"description":    book.Description,
+		"title":          *book.Title,
+		"author":         *book.Author,
+		"published_year": py,
+		"isbn":           isbn,
+		"description":    desc,
 	})
 	if result.Error != nil {
 		return result.Error
@@ -70,27 +80,27 @@ func (r *GORMBookRepository) Update(id string, book *Book) error {
 	return nil
 }
 
-func (r *GORMBookRepository) Patch(id string, patch *BookPatch) (*Book, error) {
-	updates := make(map[string]any)
-	if patch.Title != nil {
-		updates["title"] = *patch.Title
+func (r *GORMBookRepository) Patch(id string, updates *PartialBook) (*Book, error) {
+	u := make(map[string]any)
+	if updates.Title != nil {
+		u["title"] = *updates.Title
 	}
-	if patch.Author != nil {
-		updates["author"] = *patch.Author
+	if updates.Author != nil {
+		u["author"] = *updates.Author
 	}
-	if patch.PublishedYear != nil {
-		updates["published_year"] = *patch.PublishedYear
+	if updates.PublishedYear != nil {
+		u["published_year"] = *updates.PublishedYear
 	}
-	if patch.ISBN != nil {
-		updates["isbn"] = *patch.ISBN
+	if updates.ISBN != nil {
+		u["isbn"] = *updates.ISBN
 	}
-	if patch.Description != nil {
-		updates["description"] = *patch.Description
+	if updates.Description != nil {
+		u["description"] = *updates.Description
 	}
-	if len(updates) == 0 {
+	if len(u) == 0 {
 		return r.GetByID(id)
 	}
-	result := r.db.Model(&Book{}).Where("id = ?", id).Updates(updates)
+	result := r.db.Model(&Book{}).Where("id = ?", id).Updates(u)
 	if result.Error != nil {
 		return nil, result.Error
 	}

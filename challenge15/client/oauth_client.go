@@ -1,4 +1,4 @@
-package oauth
+package client
 
 import (
 	"context"
@@ -9,6 +9,19 @@ import (
 	"strings"
 	"time"
 )
+
+// OAuth2Config holds the client-side configuration for talking to an OAuth2 server.
+type OAuth2Config struct {
+	AuthorizationEndpoint string
+	TokenEndpoint         string
+	IntrospectEndpoint    string
+	RevokeEndpoint        string
+	LogoutEndpoint        string
+	ClientID              string
+	ClientSecret          string //nolint:gosec // G117
+	RedirectURI           string
+	Scopes                []string
+}
 
 // OAuth2Client is a simple OAuth2 client that can drive the authorization code
 // flow, refresh tokens, and make authenticated requests.

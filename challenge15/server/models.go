@@ -1,4 +1,4 @@
-package oauth
+package server
 
 import "time"
 
@@ -22,18 +22,16 @@ type AuthCode struct {
 	CodeChallengeMethod string
 }
 
-// AccessToken is an issued OAuth2 access token.
-type AccessToken struct {
-	Token     string `gorm:"primaryKey"`
-	ClientID  string
-	UserID    string
-	Scopes    []string `gorm:"serializer:json"`
-	ExpiresAt time.Time
-}
+// Token type constants.
+const (
+	TokenTypeAccess  = "access"
+	TokenTypeRefresh = "refresh"
+)
 
-// RefreshToken is an issued OAuth2 refresh token.
-type RefreshToken struct {
+// Token is an issued OAuth2 token (access or refresh).
+type Token struct {
 	Token     string `gorm:"primaryKey"`
+	Type      string `gorm:"index;size:16"` // TokenTypeAccess or TokenTypeRefresh
 	ClientID  string
 	UserID    string
 	Scopes    []string `gorm:"serializer:json"`

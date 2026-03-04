@@ -18,6 +18,7 @@ var loginTemplate = template.Must( //nolint:gochecknoglobals
         body { font-family: system-ui, sans-serif; max-width: 400px; margin: 3rem auto; padding: 0 1rem; }
         h1 { font-size: 1.25rem; }
         input { display: block; width: 100%; padding: 0.5rem; margin: 0.5rem 0; box-sizing: border-box; }
+        input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; border: 1px solid #ced4da; }
         button { padding: 0.5rem 1rem; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
@@ -25,8 +26,8 @@ var loginTemplate = template.Must( //nolint:gochecknoglobals
     <h1>Sign in</h1>
     <form method="POST" action="/login?redirect={{urlquery .Redirect}}">
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-        <input type="text" name="username" value="user" required autofocus>
-        <input type="password" name="password" value="password" required>
+        <input type="text" name="username" value="user" required readonly>
+        <input type="password" name="password" value="password" required readonly>
         <button type="submit">Sign in</button>
     </form>
 </body>

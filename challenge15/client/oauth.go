@@ -118,7 +118,7 @@ func (a *App) revokeToken(token, tokenTypeHint string) {
 // refreshSession creates a fresh token pair from the stored refresh token using
 // a local OAuth2Client so that concurrent requests do not race on shared state.
 func (a *App) refreshSession(sess *sessionData) (*sessionData, error) {
-	local := oauth.NewOAuth2Client(a.config)
+	local := NewOAuth2Client(a.config)
 	local.AccessToken = sess.AccessToken
 	local.RefreshToken = sess.RefreshToken
 	if err := local.DoRefreshToken(); err != nil {
@@ -134,7 +134,7 @@ func (a *App) refreshSession(sess *sessionData) (*sessionData, error) {
 // exchangeCode exchanges an authorization code for tokens using a local client,
 // avoiding mutation of any shared state.
 func (a *App) exchangeCode(code, verifier string) (*sessionData, error) {
-	local := oauth.NewOAuth2Client(a.config)
+	local := NewOAuth2Client(a.config)
 	if err := local.ExchangeCodeForToken(code, verifier); err != nil {
 		return nil, err
 	}

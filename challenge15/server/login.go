@@ -3,7 +3,6 @@ package server
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"go-interview-practice/challenge15/oauth"
 	"net/http"
 	"time"
 
@@ -59,7 +58,7 @@ func (s *OAuth2Server) handleLoginPost(w http.ResponseWriter, r *http.Request, r
 		return
 	}
 
-	var user oauth.User
+	var user User
 	if err := s.db.First(&user, "username = ?", username).Error; err != nil {
 		s.renderLoginFormWithNewCSRF(w, redirect)
 		return

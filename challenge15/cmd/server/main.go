@@ -1,7 +1,6 @@
 package main
 
 import (
-	"go-interview-practice/challenge15/oauth"
 	"go-interview-practice/challenge15/server"
 	"log"
 
@@ -17,23 +16,13 @@ func main() {
 
 	srv := server.NewOAuth2Server(db)
 
-	for _, c := range []*oauth.Client{
-		{
-			ClientID:      "demo",
-			ClientSecret:  "secret",
-			RedirectURIs:  []string{"http://localhost/cb"},
-			AllowedScopes: []string{"read", "write"},
-		},
-		{
-			ClientID:      "demo-client",
-			ClientSecret:  "secret",
-			RedirectURIs:  []string{"http://localhost:8081/callback"},
-			AllowedScopes: []string{"read", "write", "profile"},
-		},
-	} {
-		if err := srv.EnsureClient(c); err != nil {
-			log.Fatalf("failed to seed client %s: %v", c.ClientID, err)
-		}
+	if err := srv.EnsureClient(&server.Client{
+		ClientID:      "demo-client",
+		ClientSecret:  "secret",
+		RedirectURIs:  []string{"http://localhost:8081/callback"},
+		AllowedScopes: []string{"read", "write", "profile"},
+	}); err != nil {
+		log.Fatalf("failed to seed client: %v", err)
 	}
 
 	log.Println("OAuth2 server listening on :8080")

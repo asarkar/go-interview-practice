@@ -1,7 +1,6 @@
 package server
 
 import (
-	"go-interview-practice/challenge15/oauth"
 	"log"
 	"net/http"
 	"sync"
@@ -23,15 +22,14 @@ type OAuth2Server struct {
 	csrfTokensMu    sync.RWMutex
 }
 
-// NewOAuth2Server initialises the server, auto-migrates the schema, and seeds a
+// NewOAuth2Server initializes the server, auto-migrates the schema, and seeds a
 // demo user with a bcrypt-hashed password.
 func NewOAuth2Server(db *gorm.DB) *OAuth2Server {
 	if err := db.AutoMigrate(
-		&oauth.Client{},
-		&oauth.AuthCode{},
-		&oauth.AccessToken{},
-		&oauth.RefreshToken{},
-		&oauth.User{},
+		&Client{},
+		&AuthCode{},
+		&Token{},
+		&User{},
 	); err != nil {
 		log.Fatalf("failed to migrate schema: %v", err)
 	}
@@ -44,7 +42,7 @@ func NewOAuth2Server(db *gorm.DB) *OAuth2Server {
 	if err != nil {
 		log.Fatalf("failed to hash demo user password: %v", err)
 	}
-	s.db.Where("id = ?", "user").FirstOrCreate(&oauth.User{
+	s.db.Where("id = ?", "user").FirstOrCreate(&User{
 		ID:       "user",
 		Username: "user",
 		Password: string(hash),

@@ -53,7 +53,7 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func (s *OAuth2Server) authenticateClient(r *http.Request) (*oauth.Client, error) {
+func (s *OAuth2Server) authenticateClient(r *http.Request) (*Client, error) {
 	var clientID, clientSecret string
 	if id, secret, ok := r.BasicAuth(); ok {
 		clientID, clientSecret = id, secret
@@ -141,7 +141,7 @@ func (s *OAuth2Server) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 	code := hex.EncodeToString(codeBytes)
 
-	authCode := &oauth.AuthCode{
+	authCode := &AuthCode{
 		Code:                code,
 		ClientID:            clientID,
 		UserID:              userID,
@@ -251,14 +251,14 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	at := &oauth.AccessToken{
+	at := &Token{
 		Token:     atStr,
 		ClientID:  client.ClientID,
 		UserID:    authCode.UserID,
 		Scopes:    authCode.Scopes,
 		ExpiresAt: time.Now().Add(accessTokenTTL),
 	}
-	rt := &oauth.RefreshToken{
+	rt := &Token{
 		Token:     rtStr,
 		ClientID:  client.ClientID,
 		UserID:    authCode.UserID,
@@ -289,7 +289,7 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 	}
 
 	rawRT := r.FormValue("refresh_token")
-	rt, err := s.GetRefreshToken(rawRT)
+	rt, err := s.GetToken(rawRT, TokenTypeRefresh)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_grant", "refresh token not found")
 		return
@@ -331,14 +331,14 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	newAT := &oauth.AccessToken{
+	newAT := &Token{
 		Token:     atStr,
 		ClientID:  client.ClientID,
 		UserID:    rt.UserID,
 		Scopes:    rt.Scopes,
 		ExpiresAt: time.Now().Add(accessTokenTTL),
 	}
-	newRT := &oauth.RefreshToken{
+	newRT := &Token{
 		Token:     rtStr,
 		ClientID:  client.ClientID,
 		UserID:    rt.UserID,
@@ -372,12 +372,7 @@ func (s *OAuth2Server) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := r.FormValue("token")
-	if err := s.DeleteAccessToken(token); err != nil {
-		writeError(w, http.StatusInternalServerError, "server_error", "failed to revoke token")
-		return
-	}
-	if err := s.DeleteRefreshToken(token); err != nil {
+	if err := s.DeleteToken(r.FormValue("token")); err != nil {
 		writeError(w, http.StatusInternalServerError, "server_error", "failed to revoke token")
 		return
 	}

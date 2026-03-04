@@ -46,11 +46,13 @@ func TestCreateBook(t *testing.T) {
 
 	// Create a new book
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 
 	bookJSON, err := json.Marshal(book)
@@ -80,9 +82,16 @@ func TestCreateBook(t *testing.T) {
 	if createdBook.ID == "" {
 		t.Error("Expected book to have an ID")
 	}
-	if createdBook.Title != book.Title {
-		t.Errorf("Expected book title %s; got %s", book.Title, createdBook.Title)
+	if createdBook.Title == nil || *createdBook.Title != *book.Title {
+		t.Errorf("Expected book title %s; got %s", *book.Title, val(createdBook.Title))
 	}
+}
+
+func val(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func TestCreateBookInvalid(t *testing.T) {
@@ -90,10 +99,7 @@ func TestCreateBookInvalid(t *testing.T) {
 	defer server.Close()
 
 	// Create a book with missing required fields
-	book := &Book{
-		// Title intentionally missing
-		Author: "John Doe",
-	}
+	book := &Book{PartialBook: PartialBook{Author: strPtr("John Doe")}}
 
 	bookJSON, err := json.Marshal(book)
 	if err != nil {
@@ -121,11 +127,13 @@ func TestGetBookByID(t *testing.T) {
 
 	// First create a book
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 
 	bookJSON, err := json.Marshal(book)
@@ -169,8 +177,8 @@ func TestGetBookByID(t *testing.T) {
 	if retrievedBook.ID != createdBook.ID {
 		t.Errorf("Expected book ID %s; got %s", createdBook.ID, retrievedBook.ID)
 	}
-	if retrievedBook.Title != book.Title {
-		t.Errorf("Expected book title %s; got %s", book.Title, retrievedBook.Title)
+	if retrievedBook.Title == nil || book.Title == nil || *retrievedBook.Title != *book.Title {
+		t.Errorf("Expected book title %s; got %s", val(book.Title), val(retrievedBook.Title))
 	}
 }
 
@@ -195,11 +203,13 @@ func TestUpdateBook(t *testing.T) {
 
 	// First create a book
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 
 	bookJSON, err := json.Marshal(book)
@@ -226,7 +236,7 @@ func TestUpdateBook(t *testing.T) {
 
 	// Now update the book
 	updatedBook := createdBook
-	updatedBook.Description = "Updated description"
+	updatedBook.Description = strPtr("Updated description")
 
 	updatedBookJSON, err := json.Marshal(updatedBook)
 	if err != nil {
@@ -258,11 +268,12 @@ func TestUpdateBook(t *testing.T) {
 		t.Fatalf("Failed to decode response body: %v", err)
 	}
 
-	if returnedBook.Description != updatedBook.Description {
+	if returnedBook.Description == nil || updatedBook.Description == nil ||
+		*returnedBook.Description != *updatedBook.Description {
 		t.Errorf(
 			"Expected description %s; got %s",
-			updatedBook.Description,
-			returnedBook.Description,
+			val(updatedBook.Description),
+			val(returnedBook.Description),
 		)
 	}
 }
@@ -272,12 +283,14 @@ func TestUpdateBookNotFound(t *testing.T) {
 	defer server.Close()
 
 	book := &Book{
-		ID:            "nonexistent",
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		ID: "nonexistent",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 
 	bookJSON, err := json.Marshal(book)
@@ -311,12 +324,7 @@ func TestUpdateBookInvalid(t *testing.T) {
 	defer server.Close()
 
 	// PUT with missing required fields (title)
-	book := &Book{
-		Author:        "John Doe",
-		PublishedYear: 2020,
-		ISBN:          "978-1234567890",
-		Description:   "A book",
-	}
+	book := &Book{PartialBook: NewPartialBook("", "John Doe", 2020, "978-1234567890", "A book")}
 	bookJSON, err := json.Marshal(book)
 	if err != nil {
 		t.Fatalf("Failed to marshal book: %v", err)
@@ -349,11 +357,13 @@ func TestPartiallyUpdateBook(t *testing.T) {
 
 	// Create a book first
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 	bookJSON, err := json.Marshal(book)
 	if err != nil {
@@ -377,8 +387,7 @@ func TestPartiallyUpdateBook(t *testing.T) {
 	resp.Body.Close()
 
 	// PATCH with only description
-	desc := "Updated via PATCH"
-	patch := BookPatch{Description: &desc}
+	patch := &Book{PartialBook: NewPartialBook("", "", 0, "", "Updated via PATCH")}
 	patchJSON, err := json.Marshal(patch)
 	if err != nil {
 		t.Fatalf("Failed to marshal patch: %v", err)
@@ -407,11 +416,20 @@ func TestPartiallyUpdateBook(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&returnedBook); err != nil {
 		t.Fatalf("Failed to decode response body: %v", err)
 	}
-	if returnedBook.Description != desc {
-		t.Errorf("Expected description %q; got %q", desc, returnedBook.Description)
+	if returnedBook.Description == nil || *returnedBook.Description != "Updated via PATCH" {
+		t.Errorf(
+			"Expected description %q; got %q",
+			"Updated via PATCH",
+			val(returnedBook.Description),
+		)
 	}
-	if returnedBook.Title != createdBook.Title {
-		t.Errorf("Expected title unchanged %q; got %q", createdBook.Title, returnedBook.Title)
+	if returnedBook.Title == nil || createdBook.Title == nil ||
+		*returnedBook.Title != *createdBook.Title {
+		t.Errorf(
+			"Expected title unchanged %q; got %q",
+			val(createdBook.Title),
+			val(returnedBook.Title),
+		)
 	}
 }
 
@@ -419,8 +437,7 @@ func TestPartiallyUpdateBookNotFound(t *testing.T) {
 	server := setupTestServer()
 	defer server.Close()
 
-	desc := "Updated description"
-	patch := BookPatch{Description: &desc}
+	patch := &Book{PartialBook: NewPartialBook("", "", 0, "", "Updated description")}
 	patchJSON, err := json.Marshal(patch)
 	if err != nil {
 		t.Fatalf("Failed to marshal patch: %v", err)
@@ -453,11 +470,13 @@ func TestPartiallyUpdateBookInvalid(t *testing.T) {
 
 	// Create a book first
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "Original description",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"Original description",
+		),
 	}
 	bookJSON, err := json.Marshal(book)
 	if err != nil {
@@ -481,8 +500,8 @@ func TestPartiallyUpdateBookInvalid(t *testing.T) {
 	resp.Body.Close()
 
 	// PATCH with empty title (invalid)
-	emptyTitle := ""
-	patch := BookPatch{Title: &emptyTitle}
+	// Empty title cannot be expressed with NewPartialBook (it skips empty values)
+	patch := &Book{PartialBook: PartialBook{Title: strPtr("")}}
 	patchJSON, err := json.Marshal(patch)
 	if err != nil {
 		t.Fatalf("Failed to marshal patch: %v", err)
@@ -515,11 +534,13 @@ func TestDeleteBook(t *testing.T) {
 
 	// First create a book
 	book := &Book{
-		Title:         "The Go Programming Language",
-		Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-		PublishedYear: 2015,
-		ISBN:          "978-0134190440",
-		Description:   "The definitive guide to programming in Go",
+		PartialBook: NewPartialBook(
+			"The Go Programming Language",
+			"Alan A. A. Donovan and Brian W. Kernighan",
+			2015,
+			"978-0134190440",
+			"The definitive guide to programming in Go",
+		),
 	}
 
 	bookJSON, err := json.Marshal(book)
@@ -626,25 +647,31 @@ func TestSearchBooksByAuthor(t *testing.T) {
 	// Create several books
 	books := []*Book{
 		{
-			Title:         "The Go Programming Language",
-			Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-			PublishedYear: 2015,
-			ISBN:          "978-0134190440",
-			Description:   "The definitive guide to programming in Go",
+			PartialBook: NewPartialBook(
+				"The Go Programming Language",
+				"Alan A. A. Donovan and Brian W. Kernighan",
+				2015,
+				"978-0134190440",
+				"The definitive guide to programming in Go",
+			),
 		},
 		{
-			Title:         "Go in Action",
-			Author:        "William Kennedy",
-			PublishedYear: 2015,
-			ISBN:          "978-1617291784",
-			Description:   "An introduction to Go",
+			PartialBook: NewPartialBook(
+				"Go in Action",
+				"William Kennedy",
+				2015,
+				"978-1617291784",
+				"An introduction to Go",
+			),
 		},
 		{
-			Title:         "The C Programming Language",
-			Author:        "Brian W. Kernighan and Dennis Ritchie",
-			PublishedYear: 1988,
-			ISBN:          "978-0131103627",
-			Description:   "The definitive guide to C",
+			PartialBook: NewPartialBook(
+				"The C Programming Language",
+				"Brian W. Kernighan and Dennis Ritchie",
+				1988,
+				"978-0131103627",
+				"The definitive guide to C",
+			),
 		},
 	}
 
@@ -695,25 +722,31 @@ func TestSearchBooksByTitle(t *testing.T) {
 	// Create several books
 	books := []*Book{
 		{
-			Title:         "The Go Programming Language",
-			Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-			PublishedYear: 2015,
-			ISBN:          "978-0134190440",
-			Description:   "The definitive guide to programming in Go",
+			PartialBook: NewPartialBook(
+				"The Go Programming Language",
+				"Alan A. A. Donovan and Brian W. Kernighan",
+				2015,
+				"978-0134190440",
+				"The definitive guide to programming in Go",
+			),
 		},
 		{
-			Title:         "Go in Action",
-			Author:        "William Kennedy",
-			PublishedYear: 2015,
-			ISBN:          "978-1617291784",
-			Description:   "An introduction to Go",
+			PartialBook: NewPartialBook(
+				"Go in Action",
+				"William Kennedy",
+				2015,
+				"978-1617291784",
+				"An introduction to Go",
+			),
 		},
 		{
-			Title:         "The C Programming Language",
-			Author:        "Brian W. Kernighan and Dennis Ritchie",
-			PublishedYear: 1988,
-			ISBN:          "978-0131103627",
-			Description:   "The definitive guide to C",
+			PartialBook: NewPartialBook(
+				"The C Programming Language",
+				"Brian W. Kernighan and Dennis Ritchie",
+				1988,
+				"978-0131103627",
+				"The definitive guide to C",
+			),
 		},
 	}
 
@@ -764,18 +797,22 @@ func TestSearchBooksByTitleNoResults(t *testing.T) {
 	// Create several books
 	books := []*Book{
 		{
-			Title:         "The Go Programming Language",
-			Author:        "Alan A. A. Donovan and Brian W. Kernighan",
-			PublishedYear: 2015,
-			ISBN:          "978-0134190440",
-			Description:   "The definitive guide to programming in Go",
+			PartialBook: NewPartialBook(
+				"The Go Programming Language",
+				"Alan A. A. Donovan and Brian W. Kernighan",
+				2015,
+				"978-0134190440",
+				"The definitive guide to programming in Go",
+			),
 		},
 		{
-			Title:         "Go in Action",
-			Author:        "William Kennedy",
-			PublishedYear: 2015,
-			ISBN:          "978-1617291784",
-			Description:   "An introduction to Go",
+			PartialBook: NewPartialBook(
+				"Go in Action",
+				"William Kennedy",
+				2015,
+				"978-1617291784",
+				"An introduction to Go",
+			),
 		},
 	}
 

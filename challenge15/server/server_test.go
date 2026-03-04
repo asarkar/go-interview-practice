@@ -43,7 +43,7 @@ func injectTestUser(next http.Handler) http.Handler {
 
 func registerTestClient(t *testing.T, srv *OAuth2Server) {
 	t.Helper()
-	err := srv.RegisterClient(&oauth.Client{
+	err := srv.RegisterClient(&Client{
 		ClientID:      "test-client",
 		ClientSecret:  "test-secret",
 		RedirectURIs:  []string{"https://client.example.com/callback"},
@@ -120,7 +120,7 @@ func exchangeCode(t *testing.T, ts *httptest.Server, code, verifier string) (str
 func TestClientRegistration(t *testing.T) {
 	srv, _ := newTestServer(t)
 
-	client := &oauth.Client{
+	client := &Client{
 		ClientID:      "test-client",
 		ClientSecret:  "test-secret",
 		RedirectURIs:  []string{"https://client.example.com/callback"},
@@ -130,7 +130,7 @@ func TestClientRegistration(t *testing.T) {
 		t.Fatalf("failed to register client: %v", err)
 	}
 
-	dup := &oauth.Client{
+	dup := &Client{
 		ClientID:      "test-client",
 		ClientSecret:  "different-secret",
 		RedirectURIs:  []string{"https://other.example.com/callback"},
@@ -499,7 +499,7 @@ func TestRefreshToken(t *testing.T) {
 			t.Errorf("expected 401, got %d", resp.StatusCode)
 		}
 
-		if _, err := srv.GetRefreshToken(refreshToken); err != nil {
+		if _, err := srv.GetToken(refreshToken, TokenTypeRefresh); err != nil {
 			t.Error("refresh token should still be valid after failed client authentication")
 		}
 	})
@@ -559,8 +559,9 @@ func TestTokenValidation(t *testing.T) {
 	})
 
 	t.Run("ExpiredToken", func(t *testing.T) {
-		expired := &oauth.AccessToken{
+		expired := &Token{
 			Token:     hashToken("expired-raw-token"),
+			Type:      TokenTypeAccess,
 			ClientID:  "test-client",
 			UserID:    testUserID,
 			Scopes:    []string{"read"},
@@ -601,7 +602,7 @@ func TestTokenRevocation(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("expected 200, got %d", resp.StatusCode)
 		}
-		if _, err := srv.GetAccessToken(accessToken); err == nil {
+		if _, err := srv.GetToken(accessToken, TokenTypeAccess); err == nil {
 			t.Error("access token should be revoked")
 		}
 	})
@@ -621,7 +622,7 @@ func TestTokenRevocation(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("expected 200, got %d", resp.StatusCode)
 		}
-		if _, err := srv.GetRefreshToken(refreshToken); err == nil {
+		if _, err := srv.GetToken(refreshToken, TokenTypeRefresh); err == nil {
 			t.Error("refresh token should be revoked")
 		}
 	})

@@ -112,17 +112,17 @@ func (h *BookHandler) updateBook(w http.ResponseWriter, r *http.Request) {
 func (h *BookHandler) partiallyUpdateBook(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = r.Body.Close() }()
 	id := chi.URLParam(r, "id")
-	var patch BookPatch
-	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
+	var updates PartialBook
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	book, err := h.Service.PartiallyUpdateBook(id, &patch)
+	updated, err := h.Service.PartiallyUpdateBook(id, &updates)
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, book)
+	writeJSON(w, http.StatusOK, updated)
 }
 
 func (h *BookHandler) deleteBook(w http.ResponseWriter, r *http.Request) {
