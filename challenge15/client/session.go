@@ -13,8 +13,8 @@ const (
 )
 
 type sessionData struct {
-	AccessToken      string    //nolint:gosec // G117
-	RefreshToken     string    //nolint:gosec // G117
+	AccessToken      string
+	RefreshToken     string
 	ExpiresAt        time.Time // access token expiry
 	sessionExpiresAt time.Time // server-side session TTL
 }

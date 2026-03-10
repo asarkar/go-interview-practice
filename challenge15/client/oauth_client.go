@@ -18,7 +18,7 @@ type OAuth2Config struct {
 	RevokeEndpoint        string
 	LogoutEndpoint        string
 	ClientID              string
-	ClientSecret          string //nolint:gosec // G117
+	ClientSecret          string
 	RedirectURI           string
 	Scopes                []string
 }
@@ -27,8 +27,8 @@ type OAuth2Config struct {
 // flow, refresh tokens, and make authenticated requests.
 type OAuth2Client struct {
 	Config       OAuth2Config
-	AccessToken  string //nolint:gosec // G117
-	RefreshToken string //nolint:gosec // G117
+	AccessToken  string
+	RefreshToken string
 	TokenExpiry  time.Time
 	httpClient   *http.Client
 }
@@ -72,7 +72,7 @@ func (c *OAuth2Client) ExchangeCodeForToken(code, verifier string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := c.httpClient.Do(req) //nolint:gosec // G704
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (c *OAuth2Client) DoRefreshToken() error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := c.httpClient.Do(req) //nolint:gosec // G704
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -119,13 +119,13 @@ func (c *OAuth2Client) MakeAuthenticatedRequest(urlStr, method string) (*http.Re
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.AccessToken)
-	return c.httpClient.Do(req) //nolint:gosec // G704
+	return c.httpClient.Do(req)
 }
 
 func (c *OAuth2Client) decodeTokenResponse(resp *http.Response) error {
 	var tr struct {
-		AccessToken  string `json:"access_token"`  //nolint:gosec // G117
-		RefreshToken string `json:"refresh_token"` //nolint:gosec // G117
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 		ExpiresIn    int    `json:"expires_in"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {

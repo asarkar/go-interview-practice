@@ -26,11 +26,14 @@ const (
 	authCodeTTL     = 10 * time.Minute
 )
 
+// maxBodySize limits form body reads to 1 MiB to prevent memory exhaustion.
+const maxBodySize = 1 << 20
+
 type tokenResponse struct {
-	AccessToken  string `json:"access_token"` //nolint:gosec // G117
+	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"` //nolint:gosec // G117
+	RefreshToken string `json:"refresh_token"`
 	Scope        string `json:"scope"`
 }
 
@@ -173,6 +176,7 @@ func redirectWithError(w http.ResponseWriter, r *http.Request, redirectURI, errC
 
 // HandleToken implements POST /token (authorization_code and refresh_token grants).
 func (s *OAuth2Server) HandleToken(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	if err := r.ParseForm(); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
 		return
@@ -188,6 +192,7 @@ func (s *OAuth2Server) HandleToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	client, err := s.authenticateClient(r)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid_client", "invalid client credentials")
@@ -272,16 +277,18 @@ func (s *OAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(tokenResponse{
-		AccessToken:  atStr,
-		TokenType:    "Bearer",
-		ExpiresIn:    int(accessTokenTTL.Seconds()),
-		RefreshToken: rtStr,
-		Scope:        strings.Join(authCode.Scopes, " "),
-	})
+	_ = json.NewEncoder(w). //nolint:gosec // G117: token response is intentional
+				Encode(tokenResponse{
+			AccessToken:  atStr,
+			TokenType:    "Bearer",
+			ExpiresIn:    int(accessTokenTTL.Seconds()),
+			RefreshToken: rtStr,
+			Scope:        strings.Join(authCode.Scopes, " "),
+		})
 }
 
 func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	client, err := s.authenticateClient(r)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid_client", "invalid client credentials")
@@ -352,17 +359,19 @@ func (s *OAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(tokenResponse{
-		AccessToken:  atStr,
-		TokenType:    "Bearer",
-		ExpiresIn:    int(accessTokenTTL.Seconds()),
-		RefreshToken: rtStr,
-		Scope:        strings.Join(rt.Scopes, " "),
-	})
+	_ = json.NewEncoder(w). //nolint:gosec // G117: token response is intentional
+				Encode(tokenResponse{
+			AccessToken:  atStr,
+			TokenType:    "Bearer",
+			ExpiresIn:    int(accessTokenTTL.Seconds()),
+			RefreshToken: rtStr,
+			Scope:        strings.Join(rt.Scopes, " "),
+		})
 }
 
 // HandleRevoke implements POST /revoke (RFC 7009).
 func (s *OAuth2Server) HandleRevoke(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	if err := r.ParseForm(); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
 		return
@@ -380,6 +389,7 @@ func (s *OAuth2Server) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 
 // HandleIntrospect implements POST /introspect (RFC 7662).
 func (s *OAuth2Server) HandleIntrospect(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	if err := r.ParseForm(); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "failed to parse form")
 		return

@@ -4,8 +4,8 @@ import "time"
 
 // Client is a registered OAuth2 client application.
 type Client struct {
-	ClientID      string   `gorm:"primaryKey"`
-	ClientSecret  string   //nolint:gosec // G117
+	ClientID      string `gorm:"primaryKey"`
+	ClientSecret  string
 	RedirectURIs  []string `gorm:"serializer:json"`
 	AllowedScopes []string `gorm:"serializer:json"`
 }
@@ -42,5 +42,5 @@ type Token struct {
 type User struct {
 	ID       string `gorm:"primaryKey"`
 	Username string `gorm:"uniqueIndex"`
-	Password string //nolint:gosec // G117
+	Password string
 }

@@ -4,7 +4,9 @@ set -eo pipefail
 dir="${1%/}"
 package="./${dir:+$dir/}..."
 
+go mod tidy
+
 if [ -z "${CI:-}" ]; then
-    golangci-lint fmt "$package"
+  go tool golangci-lint fmt "$package"
 fi
-golangci-lint run "$package"
+go tool golangci-lint run "$package"

@@ -33,6 +33,7 @@ func (s *OAuth2Server) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *OAuth2Server) handleLoginPost(w http.ResponseWriter, r *http.Request, redirect string) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return

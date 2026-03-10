@@ -77,7 +77,7 @@ func (a *App) introspectToken(accessToken string) (map[string]any, error) {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := a.httpClient.Do(req) //nolint:gosec // G704
+	resp, err := a.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (a *App) revokeToken(token, tokenTypeHint string) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := a.httpClient.Do(req) //nolint:gosec // G704
+	resp, err := a.httpClient.Do(req)
 	if err == nil {
 		_ = resp.Body.Close()
 	}

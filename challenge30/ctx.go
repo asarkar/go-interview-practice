@@ -45,7 +45,7 @@ func (cm *simpleContextManager) CreateCancellableContext(
 ) (context.Context, context.CancelFunc) {
 	// TODO: Implement cancellable context creation
 	// Hint: Use context.WithCancel(parent)
-	return context.WithCancel(parent)
+	return context.WithCancel(parent) //nolint:gosec // G118: cancel func is returned to the caller
 }
 
 // CreateTimeoutContext creates a context with timeout
@@ -55,7 +55,10 @@ func (cm *simpleContextManager) CreateTimeoutContext(
 ) (context.Context, context.CancelFunc) {
 	// TODO: Implement timeout context creation
 	// Hint: Use context.WithTimeout(parent, timeout)
-	return context.WithTimeout(parent, timeout)
+	return context.WithTimeout( //nolint:gosec // G118: cancel func is returned to the caller
+		parent,
+		timeout,
+	)
 }
 
 // AddValue adds a key-value pair to the context

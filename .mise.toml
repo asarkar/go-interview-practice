@@ -2,8 +2,7 @@
 GOPROXY = "https://proxy.golang.org,direct"
 
 [tools]
-go = "latest" # version pinned by go.mod
-"golangci-lint" = "latest"
+go = "{{ exec(command=`awk '/^go / {print $2}' go.mod`) }}"
 
 [tasks.setup]
 description = "Download dependencies"

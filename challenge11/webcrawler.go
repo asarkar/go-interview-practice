@@ -236,7 +236,7 @@ func (hf *HTTPFetcher) Fetch(ctx context.Context, url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := hf.Client.Do(req) //nolint:gosec
+	resp, err := hf.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
