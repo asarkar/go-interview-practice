@@ -28,10 +28,7 @@ Feel free to open issues for questions, comments, or suggestions.
 
 ## Development
 
-Install [mise](https://mise.jdx.dev/installing-mise.html), then run:
-```
-mise install
-```
+Install [mise](https://mise.jdx.dev/installing-mise.html).
 
 ### Running unit tests:
 ```
